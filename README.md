@@ -26,8 +26,6 @@ react-native link react-native-video
 + onLoad
 + onProgress
 + onEnd
-+ onAudioBecomingNoisy
-+ onAudioFocusChanged
 - Step 4: Add functions: play (from anytime), pause, mute, repeat, speed
 
 ----------------------------------------------------------------
@@ -54,8 +52,6 @@ chỉnh sửa 1 chút:
 + onLoad
 + onProgress
 + onEnd
-+ onAudioBecomingNoisy
-+ onAudioFocusChanged
 - Bước 4: Thêm các chức năng chơi, dừng, tắt tiếng, lặp lại, chỉnh tốc độ
 
 ---DONE :D---
