@@ -3,7 +3,7 @@
 Link youtube video: 
 
 ********STEPS********
-
+<pre>
 ----------------ENGLISH VERSION----------------
 - Step 1: Install module 'react-native-video'
 npm install --save react-native-video
@@ -26,3 +26,4 @@ chỉnh sửa 1 chút:
 + Chỉnh đường dẫn '../node_modules/react-native-video/android-exoplayer' thành '../node_modules/react-native-video/android'
 - Bước 3: Khởi tạo các thuộc tính cần thiết cho video
 - Bước 4: Thêm các chức năng chơi, dừng, tắt tiếng, lặp lại, chỉnh tốc độ
+</pre>
