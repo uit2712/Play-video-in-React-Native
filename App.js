@@ -10,16 +10,18 @@ import {
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Picker,
+  ToastAndroid,
+  ProgressBarAndroid
 } from 'react-native';
 import Video from 'react-native-video';
 
 export default class App extends Component<Props> {
-
-
   constructor(props) {
     super(props);
 
+    // init state variables
     this.state = {
       rate: 1,
       volume: 1,
@@ -28,30 +30,28 @@ export default class App extends Component<Props> {
       duration: 0.0,
       currentTime: 0.0,
       paused: true,
+      pickerValueHolder: '1.0',
+      pausedText: 'Play',
+      hideControls: false,
     };
 
     this.video = Video;
   }
 
+  // load video event
   onLoad = (data) => {
     this.setState({ duration: data.duration });
   };
 
+  // video is playing
   onProgress = (data) => {
     this.setState({ currentTime: data.currentTime });
   };
 
+  // video ends
   onEnd = () => {
-    this.setState({ paused: true })
-    this.video.seek(0)
-  };
-
-  onAudioBecomingNoisy = () => {
-    this.setState({ paused: true })
-  };
-
-  onAudioFocusChanged = (event: { hasAudioFocus: boolean }) => {
-    this.setState({ paused: !event.hasAudioFocus })
+    this.setState({ paused: true, pausedText: 'Play'})
+    this.video.seek(0);
   };
 
   getCurrentTimePercentage() {
@@ -61,57 +61,70 @@ export default class App extends Component<Props> {
     return 0;
   };
 
-  renderRateControl(rate) {
-    const isSelected = (this.state.rate === rate);
-
-    return (
-      <TouchableOpacity onPress={() => { this.setState({ rate }) }}>
-        <Text style={[styles.controlOption, { fontWeight: isSelected ? 'bold' : 'normal' }]}>
-          {rate}x
-        </Text>
-      </TouchableOpacity>
-    );
+  onChangeRate(itemValue, itemIndex) {
+    var rate = parseFloat(itemValue);
+    this.setState({pickerValueHolder: itemValue, rate: rate});
   }
 
-  renderResizeModeControl(resizeMode) {
-    const isSelected = (this.state.resizeMode === resizeMode);
+  // pressing on 'play' button
+  onPressBtnPlay() {
+    var pausedText = '';
+    if(!this.state.paused){
+      pausedText = 'Play';
 
-    return (
-      <TouchableOpacity onPress={() => { this.setState({ resizeMode }) }}>
-        <Text style={[styles.controlOption, { fontWeight: isSelected ? 'bold' : 'normal' }]}>
-          {resizeMode}
-        </Text>
-      </TouchableOpacity>
-    )
+      // always show controls
+      if(this.timeoutHandle)
+        clearTimeout(this.timeoutHandle);
+    }
+    else {
+      pausedText = 'Pause';
+
+      // hide controls after 5s
+      this.timeoutHandle = setTimeout(()=>{
+        this.setState({hideControls: true});
+      }, 5000);
+    }
+    this.setState({ paused: !this.state.paused, pausedText: pausedText });
   }
 
-  renderVolumeControl(volume) {
-    const isSelected = (this.state.volume === volume);
+  // on press video event
+  onPressVideo() {
+    // showing controls if they don't show
+    if(this.state.hideControls){
+      this.setState({hideControls: false});
+      this.timeoutHandle = setTimeout(()=>{
+        this.setState({hideControls: true});
+      }, 8000);
+    }
+  }
 
-    return (
-      <TouchableOpacity onPress={() => { this.setState({ volume }) }}>
-        <Text style={[styles.controlOption, { fontWeight: isSelected ? 'bold' : 'normal' }]}>
-          {volume * 100}%
-        </Text>
-      </TouchableOpacity>
-    )
+  // parse seconds to time (hour:minute:second)
+  parseSecToTime(sec) {
+    var sec_num = parseInt(sec, 10); // don't forget the second param
+    var hours   = Math.floor(sec_num / 3600);
+    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+    if (hours   < 10) {hours   = "0" + hours;}
+    if (minutes < 10) {minutes = "0" + minutes;}
+    if (seconds < 10) {seconds = "0" + seconds;}
+
+    return hours + ':' + minutes + ':' + seconds;
   }
 
   render() {
     const flexCompleted = this.getCurrentTimePercentage() * 100;
-    const flexRemaining = (1 - this.getCurrentTimePercentage()) * 100;
 
     return (
       <View style={styles.container}>
-        <TouchableOpacity
+        <TouchableWithoutFeedback
           style={styles.fullScreen}
-          onPress={() => this.setState({ paused: !this.state.paused })}
-        >
+          onPress={() => this.onPressVideo()}>
           <Video
             ref={(ref: Video) => { this.video = ref }}
             /* For ExoPlayer */
-            /* source={{ uri: 'http://www.youtube.com/api/manifest/dash/id/bf5bb2419360daf1/source/youtube?as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,source,id,as&ip=0.0.0.0&ipbits=0&expire=19000000000&signature=51AF5F39AB0CEC3E5497CD9C900EBFEAECCCB5C7.8506521BFC350652163895D4C26DEE124209AA9E&key=ik0', type: 'mpd' }} */
-            source={require('./videos/tom_and_jerry_31.mp4')}
+            source={{ uri: 'https://rawgit.com/uit2712/Mp3Container/master/tom_and_jerry_31.mp4' }} 
+            // source={require('./videos/tom_and_jerry_31.mp4')}
             style={styles.fullScreen}
             rate={this.state.rate}
             paused={this.state.paused}
@@ -125,38 +138,54 @@ export default class App extends Component<Props> {
             onAudioFocusChanged={this.onAudioFocusChanged}
             repeat={false}
           />
-        </TouchableOpacity>
+        </TouchableWithoutFeedback>
+        {
+          !this.state.hideControls ?
+          (
+            <View style={styles.controls}>
+              <View style={styles.generalControls}>
+                <View style={styles.rateControl}>
+                  <Picker
+                    style={{width: 110}}
+                    selectedValue={this.state.pickerValueHolder}
+                    onValueChange={(itemValue, itemIndex) => this.onChangeRate(itemValue, itemIndex)} >
+                    <Picker.Item label="x1.5" value="1.5"/>
+                    <Picker.Item label="x1.25" value="1.25"/>
+                    <Picker.Item label="x1.0" value="1.0"/>
+                    <Picker.Item label="x0.75" value="0.75"/>
+                    <Picker.Item label="x0.5" value="0.5"/>
+                  </Picker>
+                </View>
+                <View style={styles.playControl}>
+                  <Text onPress={() => this.onPressBtnPlay()}>{this.state.pausedText}</Text>
+                </View>
+                <View style={styles.resizeModeControl}>
+                  <Picker
+                    style={{width: 150}}
+                    selectedValue={this.state.resizeMode}
+                    onValueChange={(itemValue, itemIndex) => this.setState({resizeMode: itemValue})} >
+                    <Picker.Item label="none" value="none"/>
+                    <Picker.Item label="cover" value="cover"/>
+                    <Picker.Item label="stretch" value="stretch"/>
+                    <Picker.Item label="contain" value="contain"/>
+                  </Picker>
+                </View>
+              </View>
 
-        <View style={styles.controls}>
-          <View style={styles.generalControls}>
-            <View style={styles.rateControl}>
-              {this.renderRateControl(0.25)}
-              {this.renderRateControl(0.5)}
-              {this.renderRateControl(1.0)}
-              {this.renderRateControl(1.5)}
-              {this.renderRateControl(2.0)}
+              <View style={styles.trackingControls}>
+                <ProgressBarAndroid
+                  style={styles.progress}
+                  styleAttr="Horizontal"
+                  indeterminate={false}
+                  progress={this.getCurrentTimePercentage()}
+                />
+                <Text>{this.parseSecToTime(parseInt(this.state.currentTime))}/{this.parseSecToTime(parseInt(this.state.duration))}</Text>
+              </View>
             </View>
+          ) : (null)
+        }
 
-            <View style={styles.volumeControl}>
-              {this.renderVolumeControl(0.5)}
-              {this.renderVolumeControl(1)}
-              {this.renderVolumeControl(1.5)}
-            </View>
-
-            <View style={styles.resizeModeControl}>
-              {this.renderResizeModeControl('cover')}
-              {this.renderResizeModeControl('contain')}
-              {this.renderResizeModeControl('stretch')}
-            </View>
-          </View>
-
-          <View style={styles.trackingControls}>
-            <View style={styles.progress}>
-              <View style={[styles.innerProgressCompleted, { flex: flexCompleted }]} />
-              <View style={[styles.innerProgressRemaining, { flex: flexRemaining }]} />
-            </View>
-          </View>
-        </View>
+        
       </View>
     );
   }
@@ -167,7 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'black',
+    backgroundColor: 'white',
   },
   fullScreen: {
     position: 'absolute',
@@ -176,8 +205,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
   },
+  playButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
   controls: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'white',
+    opacity: 0.7,
     borderRadius: 5,
     position: 'absolute',
     bottom: 20,
@@ -210,7 +246,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  volumeControl: {
+  playControl: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
