@@ -226,21 +226,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     overflow: 'hidden',
   },
-  innerProgressCompleted: {
-    height: 20,
-    backgroundColor: '#cccccc',
-  },
-  innerProgressRemaining: {
-    height: 20,
-    backgroundColor: '#2C2C2C',
-  },
-  generalControls: {
-    flex: 1,
-    flexDirection: 'row',
-    borderRadius: 4,
-    overflow: 'hidden',
-    paddingBottom: 10,
-  },
   rateControl: {
     flex: 1,
     flexDirection: 'row',
@@ -256,13 +241,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  controlOption: {
-    alignSelf: 'center',
-    fontSize: 11,
-    color: 'white',
-    paddingLeft: 2,
-    paddingRight: 2,
-    lineHeight: 12,
   },
 });
