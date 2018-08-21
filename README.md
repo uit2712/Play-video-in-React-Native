@@ -1,7 +1,7 @@
 # Play-video-in-React-Native
 
 Link youtube video: 
-
+Link live demo on Expo: https://snack.expo.io/By4scwYIm
 ********STEPS********
 <pre>
 ENGLISH VERSION:
